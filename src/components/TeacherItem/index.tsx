@@ -3,6 +3,8 @@ import { View, Image, Text, Linking } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-community/async-storage';
 
+import api from '../../services/api';
+
 import heartOutlineIcon from '../../assets/images/icons/heart-outline.png';
 import unfavoriteIcon from '../../assets/images/icons/unfavorite.png';
 import whatsappIcon from '../../assets/images/icons/whatsapp.png';
@@ -28,42 +30,34 @@ const TeacherItem: React.FC<TeacherItemProps> = ({ teacher, favorited }) => {
   const [isFavorited, setIsFavorited ] = useState(favorited);
   
   function handleLinkToWhatsapp() {
+    api.post('connections', {
+      user_id: teacher.id,
+    })
+
     Linking.openURL(`whatsapp://send?phone=${teacher.whatsapp}`);
   }
 
   async function handleToggleFavorite() {
-    // adicionar aos favoritos
     const favorites = await AsyncStorage.getItem('favorites');
-    // como pode ser vazio, seta logo
     let favoritesArray = [];
-    // como pode retornar null, verifica se vem
+
     if (favorites) {
-      // transforma o favorites em array
       favoritesArray = JSON.parse(favorites);
     }
 
     if (isFavorited) {
-      // remover dos favoritos
-
-      // procurar a posicao do teacher no array de favoritos
       const favoriteIndex = favoritesArray.findIndex((teacherItem: Teacher) => {
-        // faz uma varredura procurando qual a posição da props teacher(.id)
-        // que é o elemento em evidencia atualmente e compara-lo com os itens
-        // dentro do array com os teachers
         return teacherItem.id === teacher.id;
       });
 
-      // a partir de qual indice e quantos elementos deve remover 
       favoritesArray.splice(favoriteIndex, 1);
-      // seta como falso, o elemento esta como nao-favoritado
       setIsFavorited(false);
+
     } else {
-      // add o elemento teacher no array
       favoritesArray.push(teacher);
-      // seta como true, o elemento esta como favoritado
       setIsFavorited(true);
     }
-    // salva no banco de dados, na chave favorites, o array convertido para JSON (texto)
+
     await AsyncStorage.setItem('favorites', JSON.stringify(favoritesArray));
   }
 
